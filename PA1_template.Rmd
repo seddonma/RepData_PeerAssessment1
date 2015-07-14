@@ -7,16 +7,28 @@ output:
 
 
 ## Loading and preprocessing the data
-
-
+url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+destination <- "repdata-data-activity.zip"
+library(utils)
+download.file(url, destination)
+closeAllConnections()
+dataset <- read.csv(unz(destination, "activity.csv"), sep = ",", header = TRUE)
+## NA values are ommitted 
 
 ## What is mean total number of steps taken per day?
+library(dplyr)
+dataset1 <- summarise(group_by(dataset, date), steps_tot = sum(steps))
 
+ggplot() + aes(dataset1$steps) + geom_histogram(binwidth = 3000)
 
+mean(dataset1$steps_tot, na.rm = TRUE)
+median(dataset1$steps_tot, na.rm = TRUE)
 
 ## What is the average daily activity pattern?
 
+plot(dataset2$interval, dataset2$steps_mean, type = 'l', main = 'Average Daily Activity Pattern', xlab = 'Interval', ylab = 'Mean of Steps Taken')
 
+dataset2[which.max(dataset2$steps_mean),1]
 
 ## Imputing missing values
 
