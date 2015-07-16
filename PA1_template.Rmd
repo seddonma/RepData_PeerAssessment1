@@ -17,7 +17,7 @@ dataset <- read.csv(unz(destination, "activity.csv"), sep = ",", header = TRUE)
 
 ## What is mean total number of steps taken per day?
 library(dplyr)
-dataset1 <- summarise(group_by(dataset, date), steps_tot = sum(steps))
+dataset1 <- ddply(dataset, "date", summarise, steps_tot = sum(steps))
 
 ggplot() + aes(dataset1$steps) + geom_histogram(binwidth = 3000)
 
@@ -32,6 +32,20 @@ dataset2[which.max(dataset2$steps_mean),1]
 
 ## Imputing missing values
 
+summary(dataset)
 
+dataset_imp <- ddply(dataset, "interval", transform, steps = ifelse(is.na(steps), mean(steps, na.rm=TRUE), steps))
+
+dataset_imp1 <- ddply(dataset_imp, "date", summarise, steps_sum = sum(steps))
+mean(dataset_imp1$steps_sum, na.rm = TRUE)
+median(dataset_imp1$steps_sum, na.rm = TRUE)
+ggplot() + aes(dataset_imp1$steps) + geom_histogram(binwidth = 3000)
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+dataset_imp2 <- mutate(dataset_imp, week = weekdays(as.Date(dataset_imp$date)))
+dataset_imp2 <- mutate(dataset_imp2, week = ifelse(dataset_imp2$week == "Saturday" | dataset_imp2$week == "Sunday", "Weekend", "Weekday"))
+
+dataset_imp3 <- ddply(dataset_imp2, c("week", "interval"), summarise, steps_mean = mean(steps))
+xyplot(steps_mean ~ interval | week, data = dataset_imp3, type = "l")
+
