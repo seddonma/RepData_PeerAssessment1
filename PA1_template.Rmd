@@ -7,45 +7,63 @@ output:
 
 
 ## Loading and preprocessing the data
+```{r}
 url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 destination <- "repdata-data-activity.zip"
 library(utils)
 download.file(url, destination)
 closeAllConnections()
 dataset <- read.csv(unz(destination, "activity.csv"), sep = ",", header = TRUE)
+```
+
 ## NA values are ommitted 
 
 ## What is mean total number of steps taken per day?
+```{r}
 library(dplyr)
 dataset1 <- ddply(dataset, "date", summarise, steps_tot = sum(steps))
+```
 
+```{r}
 ggplot() + aes(dataset1$steps) + geom_histogram(binwidth = 3000)
+```
 
+```{r}
 mean(dataset1$steps_tot, na.rm = TRUE)
 median(dataset1$steps_tot, na.rm = TRUE)
-
+```
 ## What is the average daily activity pattern?
-
+```{r}
 plot(dataset2$interval, dataset2$steps_mean, type = 'l', main = 'Average Daily Activity Pattern', xlab = 'Interval', ylab = 'Mean of Steps Taken')
+```
 
+```{r}
 dataset2[which.max(dataset2$steps_mean),1]
+```
 
 ## Imputing missing values
-
+```{r}
 summary(dataset)
+```
 
+```{r}
 dataset_imp <- ddply(dataset, "interval", transform, steps = ifelse(is.na(steps), mean(steps, na.rm=TRUE), steps))
+```
 
+```{r}
 dataset_imp1 <- ddply(dataset_imp, "date", summarise, steps_sum = sum(steps))
 mean(dataset_imp1$steps_sum, na.rm = TRUE)
 median(dataset_imp1$steps_sum, na.rm = TRUE)
 ggplot() + aes(dataset_imp1$steps) + geom_histogram(binwidth = 3000)
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
-
+```{r}
 dataset_imp2 <- mutate(dataset_imp, week = weekdays(as.Date(dataset_imp$date)))
 dataset_imp2 <- mutate(dataset_imp2, week = ifelse(dataset_imp2$week == "Saturday" | dataset_imp2$week == "Sunday", "Weekend", "Weekday"))
+```
 
+```{r}
 dataset_imp3 <- ddply(dataset_imp2, c("week", "interval"), summarise, steps_mean = mean(steps))
 xyplot(steps_mean ~ interval | week, data = dataset_imp3, type = "l")
-
+```
