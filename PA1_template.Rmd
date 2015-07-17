@@ -7,25 +7,27 @@ output:
 
 
 ## Loading and preprocessing the data
-The following code snippit shows that the data was downloaded, unzipped and the csv file extracted. The data was loaded into R with no transformations done to the data. MAKE THE FOLLOWING CODE SNIPPIT NOT RUN
-```{r}
-url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+The following code snippit deomonstrates that  that the data was downloaded, unzipped and the csv file extracted. The data was loaded into R with no transformations done to the data. The file was most recently downloaded on June 17, 2015
+```{r, echo = FALSE}
+url <- "http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 destination <- "repdata-data-activity.zip"
 library(utils)
+setInternet2(use = TRUE)
 download.file(url, destination)
-closeAllConnections()
 dataset <- read.csv(unz(destination, "activity.csv"), sep = ",", header = TRUE)
 ```
 
-## NA values are ommitted 
 
 ## What is mean total number of steps taken per day?
+First, a 
 ```{r}
-library(dplyr)
+library(plyr)
 dataset1 <- ddply(dataset, "date", summarise, steps_tot = sum(steps))
 ```
 
+NA values are ommitted 
 ```{r}
+library(ggplot2)
 ggplot() + aes(dataset1$steps) + geom_histogram(binwidth = 3000)
 ```
 
@@ -35,6 +37,7 @@ median(dataset1$steps_tot, na.rm = TRUE)
 ```
 ## What is the average daily activity pattern?
 ```{r}
+dataset2 <- ddply(dataset, "interval", summarise, steps_mean = mean(steps, na.rm = TRUE))
 plot(dataset2$interval, dataset2$steps_mean, type = 'l', main = 'Average Daily Activity Pattern', xlab = 'Interval', ylab = 'Mean of Steps Taken')
 ```
 
@@ -66,5 +69,6 @@ dataset_imp2 <- mutate(dataset_imp2, week = ifelse(dataset_imp2$week == "Saturda
 
 ```{r}
 dataset_imp3 <- ddply(dataset_imp2, c("week", "interval"), summarise, steps_mean = mean(steps))
+library(lattice)
 xyplot(steps_mean ~ interval | week, data = dataset_imp3, type = "l")
 ```
