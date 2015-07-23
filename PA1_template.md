@@ -68,6 +68,11 @@ dataset$ECODMG <- (dataset$PROPDMG*as.numeric(dataset$PROPDMGEXP)) + (dataset$CR
 ```
 
 There is considerable duplication in the EVTYPE variable, this is somewhat allivated by capitalizing all EVTYPE observations. 
+FOR LATER
+events_freq <- cbind(table(dataset$EVTYPE))
+large ones to recode (up to 100):  TSTM WIND, THUNDERSTORM WINDS, URBAN/SML STREAM FLD, WILD/FOREST FIRE, FLASH FLOODING, RIP CURRENTS, HEAT, EXTREME COLD, LANDSLIDE, STORM SURGE, LIGHT SNOW, URBAN FLOOD
+
+
 ```{r}
 dataset$EVTYPE <- toupper(dataset$EVTYPE)
 ```
