@@ -36,18 +36,19 @@ library(ggplot2)
 ```{r}
 str(dataset)
 ```
+
 Using the dataset's documentation, an initial look at the full dataset shows a large number of variables that are irrelevant to the research question, such as the location and time that each event occurred. Therefore these variables are removed. In addition, in order to optimize cleaning and analyzing the dataset, observations that do not list any population or economic damage are removed.
 ```{r}
 dataset <- dataset[,c("EVTYPE", "FATALITIES", "INJURIES", "PROPDMG", "PROPDMGEXP", "CROPDMG", "CROPDMGEXP")]
 dataset <- subset(dataset, FATALITIES != 0 | INJURIES != 0 | PROPDMG != 0 | CROPDMG != 0)
 ```
 
-In order to measure the impact of a weather event on the population's health, the number of injuries and fatalities that directly result from the weather event are summed into a variable called "POPDMG" 
+In order to measure the impact of a weather event on the population's health, the number of injuries and fatalities that directly result from the weather event are summed into a variable called "POPDMG". 
 ```{r}
 dataset$POPDMG <- dataset$INJURIES + dataset$FATALITIES
 ```
 
-In order to determine the total economic cost of each weather event, many transformations needed to be made. 
+In order to determine the total economic cost of each weather event, many transformations needed to be made,largely due to the economic cost being divided into 4 columns. PROPDMG and CROPDMG are the dollar value of the property and crop damage resulting from the weather event. However, this dollar value does not include the magnitude of the dollar value, which is stored in the PROPDMGXP and CROPDMGXP variables and should be coded to H,K K, M, and B for (respectivly) a hundred, thousand, million, and billion dollars. First, all characters that do not denote a magnitude of money. Secondly, because some characters are lowercase and others are uppercase, all remaining characters are capitalized to ensure consistency. Next, H,K,M,B are recoded to their respective numeric equivilents. Then all empty cells are recoded to 0 to avoid "NA"s populating the dataset. Finally, the total property and crop variables are summed.
 ```{r}
 dataset <- dataset[!(dataset$PROPDMGEXP %in% c("-", "+", "?", "0", "2", "3", "4", "5", "6", "7", "8")),]
 dataset <- dataset[!(dataset$CROPDMGEXP %in% c("?", "0")),]
@@ -65,11 +66,22 @@ dataset$PROPDMGEXP <- sub("^$", 0, dataset$PROPDMGEXP)
 dataset$CROPDMGEXP <- sub("^$", 0, dataset$CROPDMGEXP)
 dataset$ECODMG <- (dataset$PROPDMG*as.numeric(dataset$PROPDMGEXP)) + (dataset$CROPDMG*as.numeric(dataset$CROPDMGEXP))
 ```
+
+There is considerable duplication in the EVTYPE variable, this is somewhat allivated by capitalizing all EVTYPE observations. 
+```{r}
+dataset$EVTYPE <- toupper(dataset$EVTYPE)
+```
+
 ## Results
 
-There should be a section titled Results in which your results are presented.
+```{r}
+dataset_pop <- ddply(dataset, "EVTYPE", summarize, POPDMG_sum = sum(POPDMG))
+dataset_pop <- subset(dataset_pop, POPDMG_sum > 5000)
+qplot(x = EVTYPE, y = POPDMG_sum, data = dataset_pop, geom = 'bar', stat = "identity")
+```
 
-
-The analysis document must have at least one figure containing a plot.Your analysis must have no more than three figures. Figures may have multiple plots in them (i.e. panel plots), but there cannot be more than three figures total.
-
-You must show all your code for the work in your analysis document. This may make the document a bit verbose, but that is okay. In general, you should ensure that echo = TRUE for every code chunk (this is the default setting in knitr).
+```{r}
+dataset_econ <- ddply(dataset, "EVTYPE", summarize, ECODMG_sum = sum(ECODMG))
+dataset_econ <- subset(dataset_econ, ECODMG_sum > 15000000000)
+qplot(x = EVTYPE, y = ECODMG_sum, data = dataset_econ, geom = 'bar', stat = "identity")
+```
